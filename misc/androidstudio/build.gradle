@@ -11,7 +11,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath "com.gradle.publish:plugin-publish-plugin:0.9.4"
+    classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
   }
 }
 
@@ -24,19 +24,19 @@ dependencies {
   compile gradleApi()
   compile localGroovy()
 
-  testCompile 'junit:junit:4.11'
+  testCompile 'junit:junit:4.12'
 }
 
-version = '0.2.8'
+version = '0.1'
 
 pluginBundle {
   website = 'https://golang.org/x/mobile'
   vcsUrl = 'https://golang.org/x/mobile'
-  description = 'Plugin for gomobile projects'
+  description = 'Plugin for gomobile projects next generation'
 
   plugins {
     gobindPlugin {
-      id = 'org.golang.mobile.bind'
+      id = 'org.golang.mobile.bind2'
       displayName = 'gomobile bind plugin'
       tags = ['golang', 'gomobile', 'gobind']
     }
