@@ -59,7 +59,7 @@ class GobindPlugin implements Plugin<Project> {
         gomobileTask.outputFile = project.file(project.name + ".aar")
         project.artifacts.add("default", new AARPublishArtifact(
                 'mylib',
-                null,
+                '',
                 gomobileTask))
 
         Task cleanTask = project.tasks.create("clean", {

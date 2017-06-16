@@ -39,7 +39,7 @@ dependencies {
 //    compile 'com.android.tools.build:gradle:2.3.3'
 }
 
-version = '0.1.1'
+version = '0.1.2'
 
 pluginBundle {
     website = 'https://golang.org/x/mobile'
