@@ -5,6 +5,12 @@ apply plugin: 'kotlin'
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
+// https://stackoverflow.com/questions/42200880/groovy-is-unable-to-resolve-kotlin-classes
+compileGroovy {
+    dependsOn tasks.getByPath('compileKotlin')
+    classpath += files(compileKotlin.destinationDir)
+}
+
 buildscript {
     ext.kotlin_version = '1.1.2-5'
     repositories {
@@ -29,11 +35,11 @@ dependencies {
     compile localGroovy()
 
     testCompile 'junit:junit:4.12'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 //    compile 'com.android.tools.build:gradle:2.3.3'
 }
 
-version = '0.1'
+version = '0.1.1'
 
 pluginBundle {
     website = 'https://golang.org/x/mobile'
