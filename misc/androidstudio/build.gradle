@@ -14,10 +14,13 @@ compileGroovy {
 buildscript {
     ext.kotlin_version = '1.1.2-5'
     repositories {
+//        maven {
+//            url "https://plugins.gradle.org/m2/"
+//        }
+//        mavenCentral()
         maven {
-            url "https://plugins.gradle.org/m2/"
+            url "http://maven.aliyun.com/nexus/content/groups/public"
         }
-        mavenCentral()
     }
     dependencies {
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
@@ -27,7 +30,10 @@ buildscript {
 
 apply plugin: "com.gradle.plugin-publish"
 repositories {
-    jcenter()
+//    jcenter()
+    maven {
+        url "http://maven.aliyun.com/nexus/content/groups/public"
+    }
 }
 
 dependencies {
