@@ -4,13 +4,13 @@
  * license that can be found in the LICENSE file.
  */
 
-package org.golang.mobile;
+package org.golang.mobile
 
-import java.io.File;
+import java.io.File
 
 /**
  * A task that outputs a file.
  */
-public interface OutputFileTask {
-    File getOutputFile();
+interface OutputFileTask {
+    val outputFile: File
 }
