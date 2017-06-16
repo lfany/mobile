@@ -72,15 +72,17 @@ class GobindPlugin implements Plugin<Project> {
         // First, generate the Java classes with the gobind tool.
         Task bindTask = project.tasks.create("gobind${variant.name.capitalize()}", GobindTask)
         bindTask.outputDir = outputDir
-        bindTask.javaCompile = variant.javaCompile
         bindTask.bootClasspath = variant.javaCompile.options.bootClasspath
+//        bindTask.javaCompile = variant.javaCompile
+        bindTask.variant = variant
         // TODO: Detect when updating the Java classes is redundant.
         bindTask.outputs.upToDateWhen { false }
         variant.registerJavaGeneratingTask(bindTask, outputDir)
         // Then, generate the JNI libraries with the gomobile tool.
         Task libTask = project.tasks.create("gomobile${variant.name.capitalize()}", GomobileTask)
         libTask.bootClasspath = variant.javaCompile.options.bootClasspath
-        libTask.javaCompile = variant.javaCompile
+//        libTask.javaCompile = variant.javaCompile
+        libTask.variant = variant
         // Dump the JNI libraries in the known project jniLibs directory.
         // TODO: Use a directory below build for the libraries instead. Adding a jni directory to the jniLibs
         // property of android.sourceSets only works, but only if the directory changes every build.
@@ -186,11 +188,11 @@ class GobindTask extends BindTask {
     @OutputDirectory
     File outputDir
 
-    JavaCompile javaCompile
+    def variant
 
     @TaskAction
     def gobind() {
-        run("gobind", project.gobind.GOBIND, ["-lang", "java", "-classpath", javaCompile.classpath.join(File.pathSeparator), "-outdir", outputDir.getAbsolutePath()])
+        run("gobind", project.gobind.GOBIND, ["-lang", "java", "-classpath", variant.javaCompile.classpath.join(File.pathSeparator), "-outdir", outputDir.getAbsolutePath()])
     }
 }
 
@@ -203,7 +205,7 @@ class GomobileTask extends BindTask implements OutputFileTask {
     @OutputDirectory
     File libsDir
 
-    JavaCompile javaCompile
+    def variant
 
     @TaskAction
     def gomobile() {
@@ -212,9 +214,11 @@ class GomobileTask extends BindTask implements OutputFileTask {
         }
         def cmd = ["bind", "-i"]
         // Add the generated R and databinding classes to the classpath.
-        def classpath = project.files(javaCompile.classpath, javaCompile.destinationDir)
-        cmd << "-classpath"
-        cmd << classpath.join(File.pathSeparator)
+        if (variant) {
+            def classpath = project.files(variant.javaCompile.classpath, variant.javaCompile.destinationDir)
+            cmd << "-classpath"
+            cmd << classpath.join(File.pathSeparator)
+        }
         cmd << "-o"
         cmd << outputFile.getAbsolutePath()
         cmd << "-target"
