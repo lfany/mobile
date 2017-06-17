@@ -11,11 +11,15 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Plugin
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.compile.JavaCompile
+
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 
 /*
  * GobindPlugin configures the default project that builds .AAR file
@@ -55,12 +59,37 @@ class GobindPlugin implements Plugin<Project> {
         // projects to include.
         project.configurations.create("default")
 
+        File outputDir = project.file("$project.buildDir/generated/source/gobind/$variant.dirName")
+        // First, generate the Java classes with the gobind tool.
+        Task bindTask = project.tasks.create("gobind2${variant.name.capitalize()}", GobindTask)
+        bindTask.outputDir = outputDir
+
         Task gomobileTask = project.tasks.create("gobind", GomobileTask)
         gomobileTask.outputFile = project.file(project.name + ".aar")
         project.artifacts.add("default", new AARPublishArtifact(
                 'mylib',
                 '',
                 gomobileTask))
+
+        def rootProject = project.getRootProject()
+
+        if (rootProject) {
+            for (Project proj : rootProject.subprojects) {
+                if (proj.plugins.hasPlugin('android')
+                        || proj.plugins.hasPlugin('com.android.application')) {
+                    proj.tasks.getByPath('preBuild').dependsOn(gomobileTask)
+                    // todo: remove compile project(':hello') and add compile (name: 'hello', ext: 'aar')
+                    /*
+                    flatDir {
+                        dirs '../hello'
+                    }
+                    */
+//                    proj.android.applicationVariants.all { variant ->
+//                        handleVariant(project, variant)
+//                    }
+                }
+            }
+        }
 
         Task cleanTask = project.tasks.create("clean", {
             project.delete(project.name + ".aar")
@@ -113,8 +142,8 @@ class BindTask extends DefaultTask {
             paths = paths + "/usr/local/go/bin"
         }
 
-        def exe = (cmdPath ?: findExecutable(cmd, paths))?.trim()
-        def gobin = (project.gobind.GO ?: findExecutable("go", paths))?.trim()
+        def exe = (cmdPath ?: findExecutable(cmd, paths as ArrayList<String>))?.trim()
+        def gobin = (project.gobind.GO ?: findExecutable("go", paths as ArrayList<String>))?.trim()
         def gomobileFlags = project.gobind.GOMOBILEFLAGS?.trim()
 
         if (!exe || !gobin) {
@@ -128,7 +157,7 @@ class BindTask extends DefaultTask {
             Properties properties = new Properties()
             properties.load(project.rootProject.file('local.properties').newDataInputStream())
             androidHome = properties.getProperty('sdk.dir')
-        } catch (all) {
+        } catch (ignored) {
             logger.info("failed to load local.properties.")
         }
         if (!androidHome?.trim()) {
@@ -157,7 +186,7 @@ class BindTask extends DefaultTask {
         }
     }
 
-    def isWindows() {
+    static def isWindows() {
         return System.getProperty("os.name").startsWith("Windows")
     }
 
@@ -174,7 +203,7 @@ class BindTask extends DefaultTask {
         throw new GradleException('binary ' + name + ' is not found in $PATH (' + paths + ')')
     }
 
-    def findDir(String binpath) {
+    static def findDir(String binpath) {
         if (!binpath) {
             return ""
         }
@@ -188,11 +217,11 @@ class GobindTask extends BindTask {
     @OutputDirectory
     File outputDir
 
-    def variant
+    JavaCompile javaCompile
 
     @TaskAction
     def gobind() {
-        run("gobind", project.gobind.GOBIND, ["-lang", "java", "-classpath", variant.javaCompile.classpath.join(File.pathSeparator), "-outdir", outputDir.getAbsolutePath()])
+        run("gobind", project.gobind.GOBIND, ["-lang", "java", "-classpath", javaCompile.classpath.join(File.pathSeparator), "-outdir", outputDir.getAbsolutePath()])
     }
 }
 
@@ -205,7 +234,7 @@ class GomobileTask extends BindTask implements OutputFileTask {
     @OutputDirectory
     File libsDir
 
-    def variant
+    JavaCompile javaCompile
 
     @TaskAction
     def gomobile() {
@@ -214,8 +243,8 @@ class GomobileTask extends BindTask implements OutputFileTask {
         }
         def cmd = ["bind", "-i"]
         // Add the generated R and databinding classes to the classpath.
-        if (variant) {
-            def classpath = project.files(variant.javaCompile.classpath, variant.javaCompile.destinationDir)
+        if (javaCompile) {
+            def classpath = project.files(javaCompile.classpath, javaCompile.destinationDir)
             cmd << "-classpath"
             cmd << classpath.join(File.pathSeparator)
         }
@@ -230,13 +259,13 @@ class GomobileTask extends BindTask implements OutputFileTask {
         }
         run("gomobile", project.gobind.GOMOBILE, cmd)
         // If libsDir is set, unpack (only) the JNI libraries to it.
-        if (libsDir != null) {
+        if (null != libsDir) {
             project.delete project.fileTree(dir: libsDir, include: '*/libgojni.so')
-            def zipFile = new java.util.zip.ZipFile(outputFile)
+            def zipFile = new ZipFile(outputFile)
             zipFile.entries().findAll { !it.directory && it.name.startsWith("jni/") }.each {
                 def libFile = new File(libsDir, it.name.substring(4))
                 libFile.parentFile.mkdirs()
-                zipFile.getInputStream(it).withStream {
+                zipFile.getInputStream(it as ZipEntry).withStream {
                     libFile.append(it)
                 }
             }
