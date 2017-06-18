@@ -59,10 +59,10 @@ class GobindPlugin implements Plugin<Project> {
         // projects to include.
         project.configurations.create("default")
 
-        File outputDir = project.file("$project.buildDir/generated/source/gobind/$variant.dirName")
-        // First, generate the Java classes with the gobind tool.
-        Task bindTask = project.tasks.create("gobind2${variant.name.capitalize()}", GobindTask)
-        bindTask.outputDir = outputDir
+//        File outputDir = project.file("$project.buildDir/generated/source/gobind/$variant.dirName")
+//        // First, generate the Java classes with the gobind tool.
+//        Task bindTask = project.tasks.create("gobind2${variant.name.capitalize()}", GobindTask)
+//        bindTask.outputDir = outputDir
 
         Task gomobileTask = project.tasks.create("gobind", GomobileTask)
         gomobileTask.outputFile = project.file(project.name + ".aar")
@@ -73,23 +73,23 @@ class GobindPlugin implements Plugin<Project> {
 
         def rootProject = project.getRootProject()
 
-        if (rootProject) {
-            for (Project proj : rootProject.subprojects) {
-                if (proj.plugins.hasPlugin('android')
-                        || proj.plugins.hasPlugin('com.android.application')) {
-                    proj.tasks.getByPath('preBuild').dependsOn(gomobileTask)
-                    // todo: remove compile project(':hello') and add compile (name: 'hello', ext: 'aar')
-                    /*
-                    flatDir {
-                        dirs '../hello'
-                    }
-                    */
-//                    proj.android.applicationVariants.all { variant ->
-//                        handleVariant(project, variant)
+//        if (rootProject) {
+//            for (Project proj : rootProject.subprojects) {
+//                if (proj.plugins.hasPlugin('android')
+//                        || proj.plugins.hasPlugin('com.android.application')) {
+//                    proj.tasks.getByPath('preBuild').dependsOn(gomobileTask)
+//                    // todo: remove compile project(':hello') and add compile (name: 'hello', ext: 'aar')
+//                    /*
+//                    flatDir {
+//                        dirs '../hello'
 //                    }
-                }
-            }
-        }
+//                    */
+////                    proj.android.applicationVariants.all { variant ->
+////                        handleVariant(project, variant)
+////                    }
+//                }
+//            }
+//        }
 
         Task cleanTask = project.tasks.create("clean", {
             project.delete(project.name + ".aar")
