@@ -102,16 +102,16 @@ class GobindPlugin implements Plugin<Project> {
         Task bindTask = project.tasks.create("gobind${variant.name.capitalize()}", GobindTask)
         bindTask.outputDir = outputDir
         bindTask.bootClasspath = variant.javaCompile.options.bootClasspath
-//        bindTask.javaCompile = variant.javaCompile
-        bindTask.variant = variant
+        bindTask.javaCompile = variant.javaCompile
+//        bindTask.variant = variant
         // TODO: Detect when updating the Java classes is redundant.
         bindTask.outputs.upToDateWhen { false }
         variant.registerJavaGeneratingTask(bindTask, outputDir)
         // Then, generate the JNI libraries with the gomobile tool.
         Task libTask = project.tasks.create("gomobile${variant.name.capitalize()}", GomobileTask)
         libTask.bootClasspath = variant.javaCompile.options.bootClasspath
-//        libTask.javaCompile = variant.javaCompile
-        libTask.variant = variant
+        libTask.javaCompile = variant.javaCompile
+//        libTask.variant = variant
         // Dump the JNI libraries in the known project jniLibs directory.
         // TODO: Use a directory below build for the libraries instead. Adding a jni directory to the jniLibs
         // property of android.sourceSets only works, but only if the directory changes every build.
