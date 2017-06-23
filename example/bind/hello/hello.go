@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/getsentry/raven-go"
 	"os"
-	"log"
+	//"log"
 	"strings"
 )
 
@@ -29,7 +29,7 @@ func ReportError(what string) string {
 	_, err := os.Open("test.txt")
 	if err != nil {
 		msg := raven.CaptureErrorAndWait(err, map[string]string{"what": what})
-		log.Panic(err)
+		//log.Panic(err)
 		return msg
 	}
 	return ""
